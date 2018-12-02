@@ -41,7 +41,7 @@ def main():
 
 
     # Ideas for what a state looks like:
-    # (Where orient = to left/right, above/below)
+    # (Where orient = to left/right, above/below, dir swimming, (fast/slow for shark))
     # (Fish ordered in distance from closest ot furthest away)
     #
     # No fish on hook & fi4(orient) & fi2(orient) & fi1(orient) & fi5(orient)
