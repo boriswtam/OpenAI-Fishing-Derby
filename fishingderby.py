@@ -16,6 +16,14 @@ def main():
             time.sleep(2)
             env.reset()
 
+    # Image parsing technique for now:
+    # Search w/in pre-calculated quadrants where object guaranteed to be in
+    # This gets us the pixel coordinates (ex: hook) or pixel boundaries (ex: shark)
+    # Of every game object needed to make our current state
+    # For hook, do a "blocked" search of 16 x 16 pix squares until found, 
+    # then hone in on the exact coordinate w/in that found block
+
+
     # Image parsing alg information:
     # Fish:     color: 232, 232, 74     dim: 10 x 16 pix 
     #  102
@@ -30,6 +38,7 @@ def main():
     # Borders (lft/rht):                dim: 8 pix
     # Pier                              dim: 20 pix (pole 4 pix) 0 - 27
     # Shark                             80 to 92 (13 x 25)
+
 
     # Ideas for what a state looks like:
     # (Where orient = to left/right, above/below)
