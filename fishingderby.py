@@ -2,9 +2,11 @@
 
 import gym
 import time
+import keras
 
 def main():
-    env = gym.make('FishingDerby-v0')
+    # env = gym.make('FishingDerby-v0')
+    env = gym.make('FishingDerbyDeterministic-v0')
     env.reset()
   
     while True:
@@ -15,6 +17,9 @@ def main():
         if done:
             time.sleep(2)
             env.reset()
+
+
+
 
     # Image parsing technique for now:
     # Search w/in pre-calculated quadrants where object guaranteed to be in
