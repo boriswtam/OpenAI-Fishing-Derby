@@ -6,7 +6,7 @@ from collections import deque            # For storing moves
 from keras.models import model_from_json
 import numpy as np
 import gym                                # To train our network
-env = gym.make('Boxing-v0')          # Choose game (any in the gym should work)
+env = gym.make('FishingDerby-v0')          # Choose game (any in the gym should work)
 
 import random     # For sampling batches from the observations
 
@@ -26,8 +26,9 @@ print(env.action_space.n)
 print(env.action_space.shape)
 observation = env.reset()
 print(observation.shape)
-obs = np.expand_dims(observation, axis=0)
-state = np.stack((obs, obs), axis=1)
+state = np.expand_dims(observation, axis=0)
+#state = np.stack((state, state), axis=1)
+print("new state", state.shape)
 done = False
 tot_reward = 0.0
 while not done:
@@ -35,7 +36,8 @@ while not done:
     Q = model.predict(state)        
     action = np.argmax(Q)         
     observation, reward, done, info = env.step(action)
-    obs = np.expand_dims(observation, axis=0)
-    state = np.append(np.expand_dims(obs, axis=0), state[:, :1, :], axis=1)    
+    #obs = np.expand_dims(observation, axis=0)
+    state = np.expand_dims(observation, axis=0) #np.append(np.expand_dims(observation, axis=0), state[:, :1, :], axis=1)    
+    #print("new state", state.shape)
     tot_reward += reward
 print('Game ended! Total reward: {}'.format(reward))

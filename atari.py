@@ -42,7 +42,7 @@ D = deque()                                # Register where the actions will be 
 observetime = 100                 # Number of timesteps we will be acting on the game and observing results
 epsilon = 0.9                              # Probability of doing a random move
 gamma = 0.5                                # Discounted future reward. How much we care about steps further in time
-mb_size = 50                           # Learning minibatch size
+mb_size = 10                         # Learning minibatch size
 
 # FIRST STEP: Knowing what each action does (Observing)
 
