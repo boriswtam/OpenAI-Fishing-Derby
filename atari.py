@@ -15,12 +15,12 @@ import random     # For sampling batches from the observations
 model = Sequential()
 model.add(Conv2D(32, kernel_size=(3, 3), activation='relu', input_shape=  env.observation_space.shape))
 #model.add(MaxPooling2D(pool_size=(3, 3)))
-model.add(Conv2D(64, (3, 3), activation='relu'))
+model.add(Conv2D(16, (3, 3), activation='relu'))
 #model.add(MaxPooling2D(pool_size=(3, 3)))
-model.add(Conv2D(64, (3, 3), activation='relu'))
+#model.add(Conv2D(64, (3, 3), activation='relu'))
 #model.add(MaxPooling2D(pool_size=(3, 3)))
 model.add(Flatten())
-model.add(Dense(128, activation='relu'))
+model.add(Dense(9, activation='relu'))
 model.add(Dense(env.action_space.n, init='uniform', activation='linear'))    # Same number of outputs as possible actions
 print("action space", env.action_space.n)
 model.compile(loss='mse', optimizer='adam', metrics=['accuracy'])
@@ -39,10 +39,11 @@ model.compile(loss='mse', optimizer='adam', metrics=['accuracy'])
 # Parameters
 D = deque()                                # Register where the actions will be stored
 
-observetime = 100                 # Number of timesteps we will be acting on the game and observing results
+observetime = 1000                 # Number of timesteps we will be acting on the game and observing results
 epsilon = 0.9                              # Probability of doing a random move
-gamma = 0.5                                # Discounted future reward. How much we care about steps further in time
-mb_size = 10                         # Learning minibatch size
+#1: long term, 0: short term
+gamma = 0.7                              # Discounting factor for future reward. How much we care about steps further in time
+mb_size = 50                         # Learning minibatch size
 
 # FIRST STEP: Knowing what each action does (Observing)
 
@@ -84,6 +85,7 @@ inputs = np.zeros(inputs_shape)
 targets = np.zeros((mb_size, env.action_space.n))
 
 for i in range(0, mb_size):
+    print("learning", i)
     state = minibatch[i][0]
     action = minibatch[i][1]
     reward = minibatch[i][2]
@@ -102,6 +104,16 @@ for i in range(0, mb_size):
 
 # Train network to output the Q function
     model.train_on_batch(inputs, targets)
+    if i % 10 == 0:
+        # serialize model to JSON
+        model_json = model.to_json()
+        file = "model" + str(i) + ".json"
+        with open(file, "w") as json_file:
+            json_file.write(model_json)
+        # serialize weights to HDF5
+        file_name = "model" + str(i) + ".h5"
+        print("saving model to ", file_name, file)
+        model.save_weights(file_name)
 print('Learning Finished')
 
 
