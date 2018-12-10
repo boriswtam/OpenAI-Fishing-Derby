@@ -10,9 +10,10 @@ env = gym.make('FishingDerby-v0')          # Choose game (any in the gym should 
 
 import random     # For sampling batches from the observations
 
-
+#env: (210, 160, 3)
 # Create network. Input is two consecutive game states, output is Q-values of the possible moves.
 model = Sequential()
+'''
 model.add(Conv2D(32, kernel_size=(3, 3), activation='relu', input_shape=  env.observation_space.shape))
 #model.add(MaxPooling2D(pool_size=(3, 3)))
 model.add(Conv2D(16, (3, 3), activation='relu'))
@@ -24,6 +25,23 @@ model.add(Dense(9, activation='relu'))
 model.add(Dense(env.action_space.n, init='uniform', activation='linear'))    # Same number of outputs as possible actions
 print("action space", env.action_space.n)
 model.compile(loss='mse', optimizer='adam', metrics=['accuracy'])
+'''
+
+
+model.add(Conv2D(32, kernel_size=(8, 8), strides= 4, activation='relu', input_shape=  env.observation_space.shape))
+#model.add(MaxPooling2D(pool_size=(3, 3)))
+model.add(Conv2D(64, (4, 4), strides=2, activation='relu'))
+model.add(Conv2D(64, (3, 3), strides=1, activation='relu'))
+#model.add(MaxPooling2D(pool_size=(3, 3)))
+#model.add(Conv2D(64, (3, 3), activation='relu'))
+#model.add(MaxPooling2D(pool_size=(3, 3)))
+model.add(Flatten())
+model.add(Dense(512, activation='relu'))
+model.add(Dense(env.action_space.n, init='uniform', activation='linear'))    # Same number of outputs as possible actions
+print("action space", env.action_space.n)
+model.compile(loss='mse', optimizer='adam', metrics=['accuracy'])
+
+print("input", env.observation_space.shape)
 for layer in model.layers:
     print("layer", layer.output_shape)
 '''
@@ -42,8 +60,8 @@ D = deque()                                # Register where the actions will be 
 observetime = 1000                 # Number of timesteps we will be acting on the game and observing results
 epsilon = 0.9                              # Probability of doing a random move
 #1: long term, 0: short term
-gamma = 0.7                              # Discounting factor for future reward. How much we care about steps further in time
-mb_size = 50                         # Learning minibatch size
+gamma = 0.5                              # Discounting factor for future reward. How much we care about steps further in time
+mb_size = 200                         # Learning minibatch size
 
 # FIRST STEP: Knowing what each action does (Observing)
 
