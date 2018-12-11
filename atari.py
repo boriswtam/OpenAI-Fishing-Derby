@@ -27,7 +27,7 @@ print("action space", env.action_space.n)
 model.compile(loss='mse', optimizer='adam', metrics=['accuracy'])
 '''
 
-
+actions = 10
 model.add(Conv2D(32, kernel_size=(8, 8), strides= 4, activation='relu', input_shape=  env.observation_space.shape))
 #model.add(MaxPooling2D(pool_size=(3, 3)))
 model.add(Conv2D(64, (4, 4), strides=2, activation='relu'))
@@ -37,8 +37,8 @@ model.add(Conv2D(64, (3, 3), strides=1, activation='relu'))
 #model.add(MaxPooling2D(pool_size=(3, 3)))
 model.add(Flatten())
 model.add(Dense(512, activation='relu'))
-model.add(Dense(env.action_space.n, init='uniform', activation='linear'))    # Same number of outputs as possible actions
-print("action space", env.action_space.n)
+model.add(Dense(actions, init='uniform', activation='linear'))    # Same number of outputs as possible actions
+print("action space", actions)
 model.compile(loss='mse', optimizer='adam', metrics=['accuracy'])
 
 print("input", env.observation_space.shape)
@@ -61,10 +61,10 @@ observetime = 1000                 # Number of timesteps we will be acting on th
 epsilon = 0.9                              # Probability of doing a random move
 #1: long term, 0: short term
 gamma = 0.5                              # Discounting factor for future reward. How much we care about steps further in time
-mb_size = 200                         # Learning minibatch size
+mb_size = 100                         # Learning minibatch size
 
 # FIRST STEP: Knowing what each action does (Observing)
-
+#get terms, frequency, get n gram; go through list and translate to freq; create new entry with document key
 observation = env.reset()                     # Game begins
 obs = np.expand_dims(observation, axis=0)     # (Formatting issues) Making the observation the first element of a batch of inputs 
 print("obs", obs.shape)
@@ -73,12 +73,14 @@ print("state", state.shape)
 done = False
 for t in range(observetime):
     if np.random.rand() <= epsilon:
-        action = np.random.randint(0, env.action_space.n, size=1)[0]
+        action = np.random.randint(0, actions, size=1)[0]
+        print("action", action)
     else:
         Q = model.predict(state)         # Q-values predictions
         #print("predictions", Q.shape)
         action = np.argmax(Q)             # Move with highest Q-value is the chosen one
         #print("action", action)
+
     observation_new, reward, done, info = env.step(action)     # See state of the game, reward... after performing the action
     #print("new obs", observation.shape)
     obs_new = np.expand_dims(observation_new, axis=0)          # (Formatting issues)
@@ -100,7 +102,7 @@ minibatch = random.sample(D, mb_size)                              # Sample some
 
 inputs_shape = (mb_size,) + state.shape[1:]
 inputs = np.zeros(inputs_shape)
-targets = np.zeros((mb_size, env.action_space.n))
+targets = np.zeros((mb_size, actions))
 
 for i in range(0, mb_size):
     print("learning", i)
