@@ -10,7 +10,8 @@ env = gym.make('FishingDerby-v0')
 #env: (210, 160, 3)
 model = Sequential()
 
-actions = 10
+
+actions = 8
 model.add(Conv2D(32, kernel_size=(8, 8), strides= 4, activation='relu', input_shape=  env.observation_space.shape))
 model.add(Conv2D(64, (4, 4), strides=2, activation='relu'))
 model.add(Conv2D(64, (3, 3), strides=1, activation='relu'))
@@ -42,6 +43,8 @@ print("obs", obs.shape)
 state = np.stack((obs), axis=0)
 print("state", state.shape)
 done = False
+minAction = 2
+maxAction = 10
 for t in range(observetime):
     #env.render()
     if np.random.rand() <= epsilon:
@@ -71,7 +74,7 @@ targets = np.zeros((mb_size, actions))
 for i in range(0, mb_size):
     print("learning", i)
     state = minibatch[i][0]
-    action = minibatch[i][1]
+    action = minibatch[i][1] - minAction
     reward = minibatch[i][2]
     state_new = minibatch[i][3]
     done = minibatch[i][4]
@@ -101,6 +104,7 @@ print('Learning Finished')
 
 
 # serialize model to JSON
+model.save("savedModel.h5")
 model_json = model.to_json()
 with open("model.json", "w") as json_file:
     json_file.write(model_json)
