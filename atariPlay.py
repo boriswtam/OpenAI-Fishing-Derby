@@ -35,4 +35,4 @@ while not done:
     observation, reward, done, info = env.step(action)
     state = np.expand_dims(observation, axis=0)
     tot_reward += reward
-print('Game ended! Total reward: {}'.format(reward))
+print('Game ended! Total reward: {}'.format(tot_reward))
