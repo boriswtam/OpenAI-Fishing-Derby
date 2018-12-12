@@ -11,28 +11,12 @@ import random     # For sampling batches from the observations
 #env: (210, 160, 3)
 # Create network. Input is two consecutive game states, output is Q-values of the possible moves.
 model = Sequential()
-'''
-model.add(Conv2D(32, kernel_size=(3, 3), activation='relu', input_shape=  env.observation_space.shape))
-#model.add(MaxPooling2D(pool_size=(3, 3)))
-model.add(Conv2D(16, (3, 3), activation='relu'))
-#model.add(MaxPooling2D(pool_size=(3, 3)))
-#model.add(Conv2D(64, (3, 3), activation='relu'))
-#model.add(MaxPooling2D(pool_size=(3, 3)))
-model.add(Flatten())
-model.add(Dense(9, activation='relu'))
-model.add(Dense(env.action_space.n, init='uniform', activation='linear'))    # Same number of outputs as possible actions
-print("action space", env.action_space.n)
-model.compile(loss='mse', optimizer='adam', metrics=['accuracy'])
-'''
 
-actions = 10
+
+actions = 8
 model.add(Conv2D(32, kernel_size=(8, 8), strides= 4, activation='relu', input_shape=  env.observation_space.shape))
-#model.add(MaxPooling2D(pool_size=(3, 3)))
 model.add(Conv2D(64, (4, 4), strides=2, activation='relu'))
 model.add(Conv2D(64, (3, 3), strides=1, activation='relu'))
-#model.add(MaxPooling2D(pool_size=(3, 3)))
-#model.add(Conv2D(64, (3, 3), activation='relu'))
-#model.add(MaxPooling2D(pool_size=(3, 3)))
 model.add(Flatten())
 model.add(Dense(512, activation='relu'))
 model.add(Dense(actions, init='uniform', activation='linear'))    # Same number of outputs as possible actions
@@ -45,15 +29,6 @@ for layer in model.layers:
 
 # Pixels to info/objects to moves
 
-'''
-model.add(Dense(20, input_shape=(2,) + env.observation_space.shape, init='uniform', activation='relu'))
-model.add(Flatten())       # Flatten input so as to have no problems with processing
-model.add(Dense(18, init='uniform', activation='relu'))
-model.add(Dense(10, init='uniform', activation='relu'))
-model.add(Dense(env.action_space.n, init='uniform', activation='linear'))    # Same number of outputs as possible actions
-model.compile(loss='mse', optimizer='adam', metrics=['accuracy'])
-#model.compile(loss='categorical_crossentropy', optimizer='adadelta', metrics=['accuracy'])
-'''
 
 # Parameters
 D = deque()                                # Register where the actions will be stored
@@ -74,11 +49,13 @@ print("obs", obs.shape)
 state = np.stack((obs), axis=0)
 print("state", state.shape)
 done = False
+minAction = 2
+maxAction = 10
 for t in range(observetime):
     #env.render()
     if np.random.rand() <= epsilon:
-        action = np.random.randint(0, actions, size=1)[0]
-        print("action", action)
+        action = np.random.randint(minAction, maxAction, size=1)[0]
+        
     else:
         Q = model.predict(state)         # Q-values predictions
         #print("predictions", Q.shape)
@@ -117,7 +94,7 @@ targets = np.zeros((mb_size, actions))
 for i in range(0, mb_size):
     print("learning", i)
     state = minibatch[i][0]
-    action = minibatch[i][1]
+    action = minibatch[i][1] - minAction
     reward = minibatch[i][2]
     state_new = minibatch[i][3]
     done = minibatch[i][4]
@@ -129,7 +106,7 @@ for i in range(0, mb_size):
     # Approximate value function?
     Q_sa = model.predict(state_new)
     # Q_sa and targets contains numpy array(s) of predictions
-
+    
     if done:
         targets[i, action] = reward
     else:
@@ -153,6 +130,7 @@ print('Learning Finished')
 
 
 # serialize model to JSON
+model.save("savedModel.h5")
 model_json = model.to_json()
 with open("model.json", "w") as json_file:
     json_file.write(model_json)

@@ -8,27 +8,31 @@ env = gym.make('FishingDerby-v0')         # Load fishing derby
 
 import random     # For sampling batches from the observations
 
-actions = 10
-
-for i in range(10):
+numRepeats = 10
+actions = 8
+newModel = True
+model = None
+for i in range(numRepeats):
     if i > 0:
         print('Restarting process using same model as before, iteration %d' % i)
     else:
-        # environment state shape: (210, 160, 3)
-        # Create network. Input is two consecutive game states, output is Q-values of the possible moves.
-        model = Sequential()
-        model.add(Conv2D(32, kernel_size=(8, 8), strides= 4, activation='relu', input_shape=  env.observation_space.shape))
-        #model.add(MaxPooling2D(pool_size=(3, 3)))
-        model.add(Conv2D(64, (4, 4), strides=2, activation='relu'))
-        model.add(Conv2D(64, (3, 3), strides=1, activation='relu'))
-        #model.add(MaxPooling2D(pool_size=(3, 3)))
-        #model.add(Conv2D(64, (3, 3), activation='relu'))
-        #model.add(MaxPooling2D(pool_size=(3, 3)))
-        model.add(Flatten())
-        model.add(Dense(512, activation='relu'))
-        model.add(Dense(actions, init='uniform', activation='linear'))    # Same number of outputs as possible actions
-        print("action space", actions)
-        model.compile(loss='mse', optimizer='adam', metrics=['accuracy'])
+        if newModel:
+            # environment state shape: (210, 160, 3)
+            # Create network. Input is two consecutive game states, output is Q-values of the possible moves.
+            model = Sequential()
+            model.add(Conv2D(32, kernel_size=(8, 8), strides= 4, activation='relu', input_shape=  env.observation_space.shape))
+            #model.add(MaxPooling2D(pool_size=(3, 3)))
+            model.add(Conv2D(64, (4, 4), strides=2, activation='relu'))
+            model.add(Conv2D(64, (3, 3), strides=1, activation='relu'))
+            #model.add(MaxPooling2D(pool_size=(3, 3)))
+            #model.add(Conv2D(64, (3, 3), activation='relu'))
+            #model.add(MaxPooling2D(pool_size=(3, 3)))
+            model.add(Flatten())
+            model.add(Dense(512, activation='relu'))
+            model.add(Dense(actions, init='uniform', activation='linear'))    # Same number of outputs as possible actions
+            model.compile(loss='mse', optimizer='adam', metrics=['accuracy'])
+        else:
+            model = load_model('modelSave.h5')
 
     print("input", env.observation_space.shape)
     for layer in model.layers:
@@ -55,11 +59,13 @@ for i in range(10):
     state = np.stack((obs), axis=0)
     print("state", state.shape)
     done = False
+    minAction = 2
+    maxAction = 10
     for t in range(observetime):
         #env.render()
         if np.random.rand() <= epsilon:
-            action = np.random.randint(0, actions, size=1)[0]
-            print("action", action)
+            action = np.random.randint(minAction, maxAction, size=1)[0]
+            
         else:
             Q = model.predict(state)         # Q-values predictions
             #print("predictions", Q.shape)
@@ -99,7 +105,7 @@ for i in range(10):
     for i in range(0, mb_size):
         print("learning", i)
         state = minibatch[i][0]
-        action = minibatch[i][1]
+        action = minibatch[i][1] - minAction
         reward = minibatch[i][2]
         state_new = minibatch[i][3]
         done = minibatch[i][4]
@@ -133,6 +139,19 @@ for i in range(10):
             model.save_weights(file_name)
     print('Learning Finished')
 
+
+    repNum = i // 10
+    # serialize model to JSON
+    modelSave = "savedModel" + str(repNum) + ".h5"
+    modelFile = "model"+ str(repNum) + ".h5"
+    json = "model" + str(repNum) + ".json"
+    model.save(modelSave)
+    model_json = model.to_json()
+    with open(json, "w") as json_file:
+        json_file.write(model_json)
+    # serialize weights to HDF5
+    model.save_weights(modelFile)
+    print("Saved model to disk")
     # Boris
     # Reuse model for more learning - name differently
     # Use model.save()
@@ -148,6 +167,7 @@ for i in range(10):
     # print("Saved model to disk")
 
 # serialize model to JSON
+model.save("savedModel.h5")
 model_json = model.to_json()
 with open("model.json", "w") as json_file:
     json_file.write(model_json)
